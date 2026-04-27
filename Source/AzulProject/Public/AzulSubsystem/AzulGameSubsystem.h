@@ -127,6 +127,10 @@ public:
         bool& IsItemScarf
     ) const;
 
+    //-------------------------------------------------------------ANTENA
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Azul|Antena")
+    bool bPickedAntenaGMP4;
+
     //-----------------------------------------------------------CINEMÁTICAS
 
     UFUNCTION(BlueprintCallable, Category = "Azul|Cinematics")
