@@ -121,4 +121,9 @@ protected:
 
     UFUNCTION()
     void HandleChoice4();
+
+    FTimerHandle DecisionsDelayTimer;
+
+    UFUNCTION()
+    void ShowDecisionButtons();
 };

@@ -135,6 +135,13 @@ FReply UAzulWidgetDialogueBase::NativeOnMouseButtonDown(
 
 void UAzulWidgetDialogueBase::RefreshDecisionUI()
 {
+    if (!GetWorld())
+    {
+        return;
+    }
+
+    GetWorld()->GetTimerManager().ClearTimer(DecisionsDelayTimer);
+
     if (!Dialogue || !Dialogue->CurrentRow)
     {
         if (TextName)
@@ -151,7 +158,6 @@ void UAzulWidgetDialogueBase::RefreshDecisionUI()
         if (ChoiceButton2) ChoiceButton2->SetVisibility(ESlateVisibility::Collapsed);
         if (ChoiceButton3) ChoiceButton3->SetVisibility(ESlateVisibility::Collapsed);
         if (ChoiceButton4) ChoiceButton4->SetVisibility(ESlateVisibility::Collapsed);
-
         return;
     }
 
@@ -166,25 +172,55 @@ void UAzulWidgetDialogueBase::RefreshDecisionUI()
         ButtonContinue->SetIsEnabled(!bIsDecision);
     }
 
-    auto SetupChoiceButton = [](UButton* Button, UTextBlock* Label, bool bVisible, const FString& Text)
+    auto SetupChoiceLabel = [](UTextBlock* Label, const FString& Text)
         {
-            if (!Button)
-            {
-                return;
-            }
-
-            Button->SetVisibility(bVisible ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
-
-            if (bVisible && Label)
+            if (Label)
             {
                 Label->SetText(FText::FromString(Text));
             }
         };
 
-    SetupChoiceButton(ChoiceButton1, ChoiceText1, bIsDecision && NumChoices > 0, NumChoices > 0 ? Dialogue->CurrentRow->ChoicesText[0] : FString());
-    SetupChoiceButton(ChoiceButton2, ChoiceText2, bIsDecision && NumChoices > 1, NumChoices > 1 ? Dialogue->CurrentRow->ChoicesText[1] : FString());
-    SetupChoiceButton(ChoiceButton3, ChoiceText3, bIsDecision && NumChoices > 2, NumChoices > 2 ? Dialogue->CurrentRow->ChoicesText[2] : FString());
-    SetupChoiceButton(ChoiceButton4, ChoiceText4, bIsDecision && NumChoices > 3, NumChoices > 3 ? Dialogue->CurrentRow->ChoicesText[3] : FString());
+    SetupChoiceLabel(ChoiceText1, NumChoices > 0 ? Dialogue->CurrentRow->ChoicesText[0] : FString());
+    SetupChoiceLabel(ChoiceText2, NumChoices > 1 ? Dialogue->CurrentRow->ChoicesText[1] : FString());
+    SetupChoiceLabel(ChoiceText3, NumChoices > 2 ? Dialogue->CurrentRow->ChoicesText[2] : FString());
+    SetupChoiceLabel(ChoiceText4, NumChoices > 3 ? Dialogue->CurrentRow->ChoicesText[3] : FString());
+
+    if (!bIsDecision)
+    {
+        if (ChoiceButton1) ChoiceButton1->SetVisibility(ESlateVisibility::Collapsed);
+        if (ChoiceButton2) ChoiceButton2->SetVisibility(ESlateVisibility::Collapsed);
+        if (ChoiceButton3) ChoiceButton3->SetVisibility(ESlateVisibility::Collapsed);
+        if (ChoiceButton4) ChoiceButton4->SetVisibility(ESlateVisibility::Collapsed);
+        return;
+    }
+
+    if (ChoiceButton1) ChoiceButton1->SetVisibility(ESlateVisibility::Collapsed);
+    if (ChoiceButton2) ChoiceButton2->SetVisibility(ESlateVisibility::Collapsed);
+    if (ChoiceButton3) ChoiceButton3->SetVisibility(ESlateVisibility::Collapsed);
+    if (ChoiceButton4) ChoiceButton4->SetVisibility(ESlateVisibility::Collapsed);
+
+    GetWorld()->GetTimerManager().SetTimer(
+        DecisionsDelayTimer,
+        this,
+        &UAzulWidgetDialogueBase::ShowDecisionButtons,
+        3.0f,
+        false
+    );
+}
+
+void UAzulWidgetDialogueBase::ShowDecisionButtons()
+{
+    if (!Dialogue || !Dialogue->CurrentRow || !Dialogue->CurrentRow->IsDecision)
+    {
+        return;
+    }
+
+    const int32 NumChoices = Dialogue->CurrentRow->ChoicesText.Num();
+
+    if (ChoiceButton1) ChoiceButton1->SetVisibility(NumChoices > 0 ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+    if (ChoiceButton2) ChoiceButton2->SetVisibility(NumChoices > 1 ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+    if (ChoiceButton3) ChoiceButton3->SetVisibility(NumChoices > 2 ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+    if (ChoiceButton4) ChoiceButton4->SetVisibility(NumChoices > 3 ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 }
 
 void UAzulWidgetDialogueBase::SetSpeakerName(const FString& NewName)
@@ -226,3 +262,4 @@ void UAzulWidgetDialogueBase::HandleChoice4()
 {
     PressChoice(3);
 }
+
